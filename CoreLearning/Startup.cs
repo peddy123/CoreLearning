@@ -50,6 +50,9 @@ namespace CoreLearning
             {
                 app.UseDeveloperExceptionPage();
             }
+            else {
+                app.UseExceptionHandler("/Error");
+            }
 
             //middlewares added for static files and MVC
             app.UseStaticFiles();
