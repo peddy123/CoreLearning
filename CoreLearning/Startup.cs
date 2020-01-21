@@ -39,7 +39,7 @@ namespace CoreLearning
 
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
-            services.AddIdentity<IdentityUser, IdentityRole>()
+            services.AddIdentity<ApplicationUser, IdentityRole>()
                  .AddEntityFrameworkStores<AppDbContext>();
         }
 

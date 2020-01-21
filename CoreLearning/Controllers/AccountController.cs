@@ -1,4 +1,5 @@
-﻿using CoreLearning.ViewModels;
+﻿using CoreLearning.Models;
+using CoreLearning.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,32 +9,35 @@ namespace CoreLearning.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserManager<IdentityUser> userManager;
-        private readonly SignInManager<IdentityUser> signInManager;
+        private readonly UserManager<ApplicationUser> userManager;
+        private readonly SignInManager<ApplicationUser> signInManager;
 
-        public AccountController(UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+        public AccountController(UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult Register()
         {
             return View();
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
                 // Copy data from RegisterViewModel to IdentityUser
-                var user = new IdentityUser
+                var user = new ApplicationUser
                 {
                     UserName = model.Email,
-                    Email = model.Email
+                    Email = model.Email,
+                    City = model.City
                 };
 
                 // Store user data in AspNetUsers database table
@@ -43,6 +47,11 @@ namespace CoreLearning.Controllers
                 // SignInManager and redirect to index action of HomeController
                 if (result.Succeeded)
                 {
+                    if (signInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                    {
+                        return RedirectToAction("ListUsers", "Administration");
+                    }
+
                     await signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("index", "home");
                 }
@@ -96,6 +105,28 @@ namespace CoreLearning.Controllers
             }
 
             return View(model);
+        }
+
+        [AcceptVerbs("Get", "Post")]
+        [AllowAnonymous]
+        public async Task<IActionResult> IsEmailInUse(string email)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                return Json(true);
+            }
+            else
+            {
+                return Json($"Email {email} is already in use.");
+            }
+        }
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
     }
 
