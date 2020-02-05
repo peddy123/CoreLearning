@@ -39,14 +39,26 @@ namespace CoreLearning
 
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-                 .AddEntityFrameworkStores<AppDbContext>();
+            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+                {
+                    options.SignIn.RequireConfirmedEmail = true;
+                    options.Lockout.MaxFailedAccessAttempts = 5;
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                })
+                 .AddEntityFrameworkStores<AppDbContext>()
+                .AddDefaultTokenProviders();
 
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("DeleteRolePolicy",
                     policy => policy.RequireClaim("Delete Role"));
                 options.AddPolicy("EditRolePolicy", policy => policy.RequireClaim("Edit Role"));
+            });
+
+            services.AddAuthentication().AddGoogle(options =>
+            {
+                options.ClientId = "785937510267-qg6riebv51gvr2eqf1mku639nbonhmn6.apps.googleusercontent.com";
+                options.ClientSecret = "fm4arVHd-Iw3dIxt-qGr31cY";
             });
 
         }
